@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Línea de Bienestar Integral SEMS UDG</title>
+  
+  <!-- Tailwind CSS para el diseño -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React y ReactDOM (Versión de producción) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone para compilar JSX en el navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- Contenedor donde React montará la aplicación -->
+  <div id="root"></div>
+
+  <!-- Código de la aplicación en formato React/JSX compilado al vuelo por Babel -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // Catálogo completo de escuelas y módulos del SEMS
+    const PREPARATORIAS_UDG = [
+      "Escuela de Educación Media Superior con Orientación Ocupacional (ECO)",
+      "Escuela Politécnica de Guadalajara",
+      "Escuela Politécnica de la Zona Metropolitana de Guadalajara",
+      "Escuela Preparatoria de El Salto",
+      "Escuela Preparatoria de Jalisco (Prepa 1)",
+      "Escuela Preparatoria de San José del Valle",
+      "Escuela Preparatoria de Tonalá",
+      "Escuela Preparatoria de Tonalá Norte",
+      "Escuela Preparatoria No. 2",
+      "Escuela Preparatoria No. 3",
+      "Escuela Preparatoria No. 4",
+      "Escuela Preparatoria No. 5",
+      "Escuela Preparatoria No. 6",
+      "Escuela Preparatoria No. 7",
+      "Escuela Preparatoria No. 8",
+      "Escuela Preparatoria No. 9",
+      "Escuela Preparatoria No. 10",
+      "Escuela Preparatoria No. 11",
+      "Escuela Preparatoria No. 12",
+      "Escuela Preparatoria No. 13",
+      "Escuela Preparatoria No. 14",
+      "Escuela Preparatoria No. 15",
+      "Escuela Preparatoria No. 16",
+      "Escuela Preparatoria No. 17",
+      "Escuela Preparatoria No. 18",
+      "Escuela Preparatoria No. 19",
+      "Escuela Preparatoria No. 20",
+      "Escuela Preparatoria No. 21",
+      "Escuela Preparatoria No. 22",
+      "Escuela Vocacional",
+      "Escuela Preparatoria Regional de Lagos de Moreno",
+      "Módulo Encarnación de Díaz",
+      "Módulo Ojuelos",
+      "Módulo San Diego de Alejandría",
+      "Módulo Unión de San Antonio",
+      "Módulo Villa Hidalgo",
+      "Escuela Preparatoria Regional de San Juan de los Lagos",
+      "Módulo Teocaltiche",
+      "Escuela Preparatoria Regional de Arandas",
+      "Módulo Manuel M. Diéguez (Arandas)",
+      "Escuela Preparatoria Regional de Atotonilco el Alto",
+      "Escuela Preparatoria Regional de Jalostotitlán",
+      "Módulo San Miguel el Alto",
+      "Módulo San Julián",
+      "Escuela Preparatoria Regional de Tepatitlán de Morelos",
+      "Módulo Acatic",
+      "Módulo Capilla de Guadalupe",
+      "Módulo San José de Gracia",
+      "Módulo Valle de Guadalupe",
+      "Módulo Yahualica",
+      "Escuela Preparatoria Regional de Atotonilco",
+      "Escuela Preparatoria Regional de Degollado",
+      "Escuela Preparatoria Regional de Ocotlán",
+      "Módulo Poncitlán",
+      "Módulo Zapotlán del Rey",
+      "Escuela Preparatoria Regional de La Barca",
+      "Escuela Preparatoria Regional de Puerto Vallarta",
+      "Módulo El Tuito",
+      "Módulo Ixtapa",
+      "Escuela Preparatoria Regional de Tomatlán",
+      "Módulo Campo Acosta",
+      "Módulo José María Morelos",
+      "Módulo Santiago",
+      "Escuela Preparatoria Regional de Casimiro Castillo",
+      "Módulo Chacala",
+      "Módulo Cuzalapa",
+      "Módulo Hermenegildo Galeana",
+      "Módulo La Huerta",
+      "Módulo Lo Arado",
+      "Módulo Tecomates",
+      "Escuela Preparatoria Regional de Cihuatlán",
+      "Módulo San Patricio Melaque",
+      "Módulo Miguel Hidalgo",
+      "Escuela Preparatoria Regional de Autlán de Navarro",
+      "Escuela Preparatoria Regional de El Grullo",
+      "Módulo El Limón",
+      "Módulo Tonaya",
+      "Módulo Tuxcacuesco",
+      "Escuela Preparatoria Regional de Tecolotlán",
+      "Módulo Chiquilistlán",
+      "Módulo Juchitlán",
+      "Módulo Tenamaxtlán",
+      "Escuela Preparatoria Regional de Ciudad Guzmán",
+      "Escuela Preparatoria Regional de Sayula",
+      "Módulo San Gabriel",
+      "Módulo Tapalpa",
+      "Escuela Preparatoria Regional de Tecalitlán",
+      "Escuela Preparatoria Regional de Tuxpan",
+      "Módulo Pihuamo",
+      "Módulo San Juan de Alima",
+      "Módulo Tonila",
+      "Escuela Preparatoria Regional de Zapotiltic",
+      "Escuela Preparatoria Regional de Jocotepec",
+      "Módulo Concepción de Buenos Aires",
+      "Módulo La Manzanilla de la Paz",
+      "Módulo San Cristóbal Zapotitlán",
+      "Módulo Tizapán el Alto",
+      "Escuela Preparatoria Regional de Tamazula de Gordiano",
+      "Módulo Contla",
+      "Módulo Lázaro Cárdenas",
+      "Módulo Mazamitla",
+      "Módulo Quitupan",
+      "Módulo Santa María del Oro",
+      "Módulo Valle de Juárez",
+      "Módulo Vista Hermosa",
+      "Escuela Preparatoria Regional de Ahualulco de Mercado",
+      "Módulo Teuchitlán",
+      "Escuela Preparatoria Regional de Amatitán",
+      "Módulo El Salvador",
+      "Escuela Preparatoria Regional de Ameca",
+      "Módulo San Antonio Matute",
+      "Módulo Talpa de Allende",
+      "Escuela Preparatoria Regional de El Arenal",
+      "Escuela Preparatoria Regional de Etzatlán",
+      "Escuela Preparatoria Regional de Tala",
+      "Escuela Preparatoria Regional de Tequila",
+      "Módulo El Chante",
+      "Escuela Preparatoria Regional de Colotlán",
+      "Escuela Preparatoria Regional de Huejuquilla el Alto",
+      "Módulo Mezquitic",
+      "Módulo San Andrés Cohamiata",
+      "Escuela Preparatoria Regional de Chapala",
+      "Módulo Mezcala",
+      "Escuela Preparatoria Regional de Villa Corona",
+      "Escuela Preparatoria Regional de Zacoalco de Torres",
+      "Módulo Atemajac de Brizuela"
+    ].sort();
+
+    const SEED_DATA = [
+      { id: "1", timestamp: "2026-07-01T10:15:00.000Z", plantel: "Escuela Preparatoria de Jalisco (Prepa 1)", sexo: "Femenino", grado: "2° Semestre", desempeño: "Excelente", r1: 4, r2: 3, r3: 4, r4: 3, r5: 4, score: 72, alert: false },
+      { id: "2", timestamp: "2026-07-01T11:30:00.000Z", plantel: "Escuela Preparatoria de Tonalá", sexo: "Masculino", grado: "4° Semestre", desempeño: "No Aprobatorio", r1: 1, r2: 2, r3: 1, r4: 1, r5: 1, score: 24, alert: true },
+      { id: "3", timestamp: "2026-07-02T09:00:00.000Z", plantel: "Escuela Preparatoria Regional de Ameca", sexo: "Femenino", grado: "6° Semestre", desempeño: "Bueno", r1: 5, r2: 4, r3: 4, r4: 5, r5: 5, score: 92, alert: false },
+      { id: "4", timestamp: "2026-07-02T14:45:00.000Z", plantel: "Módulo Mezquitic", sexo: "Otro", grado: "2° Semestre", desempeño: "Suficiente", r1: 2, r2: 1, r3: 0, r4: 1, r5: 2, score: 24, alert: true },
+      { id: "5", timestamp: "2026-07-03T12:00:00.000Z", plantel: "Escuela Preparatoria No. 12", sexo: "Masculino", grado: "4° Semestre", desempeño: "Excelente", r1: 3, r2: 4, r3: 3, r4: 3, r5: 3, score: 64, alert: false }
+    ];
+
+    // Iconos SVG personalizados para evitar dependencias externas complejas
+    const HeartIcon = () => (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    );
+    const SearchIcon = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    );
+    const LockIcon = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    );
+    const UnlockIcon = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 019.9-1"/></svg>
+    );
+
+    function App() {
+      const [isMasterMode, setIsMasterMode] = useState(false);
+      const [showLoginModal, setShowLoginModal] = useState(false);
+      const [passcodeInput, setPasscodeInput] = useState('');
+      const [loginError, setLoginError] = useState('');
+      const [activeTab, setActiveTab] = useState('survey');
+
+      const [records, setRecords] = useState(() => {
+        const saved = localStorage.getItem('udg_wellbeing_records_v2');
+        return saved ? JSON.parse(saved) : SEED_DATA;
+      });
+
+      useEffect(() => {
+        localStorage.setItem('udg_wellbeing_records_v2', JSON.stringify(records));
+      }, [records]);
+
+      const [plantel, setPlantel] = useState('');
+      const [plantelSearch, setPlantelSearch] = useState('');
+      const [showPlantelDropdown, setShowPlantelDropdown] = useState(false);
+      const [sexo, setSexo] = useState('');
+      const [grado, setGrado] = useState('');
+      const [desempeño, setDesempeño] = useState('');
+      
+      const [r1, setR1] = useState(null);
+      const [r2, setR2] = useState(null);
+      const [r3, setR3] = useState(null);
+      const [r4, setR4] = useState(null);
+      const [r5, setR5] = useState(null);
+
+      const [surveySubmitted, setSurveySubmitted] = useState(false);
+      const [formError, setFormError] = useState('');
+
+      const [filterPlantel, setFilterPlantel] = useState('Todos');
+      const [filterGrado, setFilterGrado] = useState('Todos');
+      const [filterSexo, setFilterSexo] = useState('Todos');
+      const [filterRendimiento, setFilterRendimiento] = useState('Todos');
+      const [filterAlerta, setFilterAlerta] = useState('Todos');
+
+      const [customModal, setCustomModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info',
+        onConfirm: null
+      });
+
+      const triggerModal = (title, message, type, onConfirm) => {
+        setCustomModal({ isOpen: true, title, message, type, onConfirm });
+      };
+
+      const closeCustomModal = () => {
+        setCustomModal(prev => ({ ...prev, isOpen: false }));
+      };
+
+      const dropdownRef = useRef(null);
+      useEffect(() => {
+        function handleClickOutside(event) {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setShowPlantelDropdown(false);
+          }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+      }, []);
+
+      const filteredPlantelesList = PREPARATORIAS_UDG.filter(p =>
+        p.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+         .includes(plantelSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+      );
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        if (passcodeInput === 'UDG-SEMS' || passcodeInput === 'udg-sems') {
+          setIsMasterMode(true);
+          setShowLoginModal(false);
+          setPasscodeInput('');
+          setLoginError('');
+          setActiveTab('admin');
+        } else {
+          setLoginError('Contraseña incorrecta. Intenta de nuevo.');
+        }
+      };
+
+      const handleLogout = () => {
+        setIsMasterMode(false);
+        setActiveTab('survey');
+        resetForm();
+      };
+
+      const resetForm = () => {
+        setPlantel('');
+        setPlantelSearch('');
+        setSexo('');
+        setGrado('');
+        setDesempeño('');
+        setR1(null);
+        setR2(null);
+        setR3(null);
+        setR4(null);
+        setR5(null);
+        setSurveySubmitted(false);
+        setFormError('');
+      };
+
+      const handleSubmitSurvey = (e) => {
+        e.preventDefault();
+        if (!plantel) {
+          setFormError('Por favor, selecciona tu plantel o preparatoria de la lista.');
+          return;
+        }
+        if (!sexo || !grado || !desempeño) {
+          setFormError('Por favor, completa todos tus datos de identificación escolar.');
+          return;
+        }
+        if (r1 === null || r2 === null || r3 === null || r4 === null || r5 === null) {
+          setFormError('Por favor, responde los 5 reactivos de bienestar emocional.');
+          return;
+        }
+
+        setFormError('');
+        const rawSum = r1 + r2 + r3 + r4 + r5;
+        const finalScore = rawSum * 4;
+        const hasLowWellbeing = rawSum < 13;
+        const hasLowItemValue = [r1, r2, r3, r4, r5].some(val => val === 0 || val === 1);
+        const hasAlert = hasLowWellbeing || hasLowItemValue;
+
+        const newRecord = {
+          id: Date.now().toString(),
+          timestamp: new Date().toISOString(),
+          plantel,
+          sexo,
+          grado,
+          desempeño,
+          r1, r2, r3, r4, r5,
+          score: finalScore,
+          alert: hasAlert
+        };
+
+        setRecords(prev => [newRecord, ...prev]);
+        setSurveySubmitted(true);
+      };
+
+      const handleDeleteRecord = (id) => {
+        triggerModal(
+          "Confirmar Eliminación",
+          "¿Estás seguro de que deseas eliminar este registro de la base de datos de manera definitiva?",
+          "danger",
+          () => {
+            setRecords(prev => prev.filter(r => r.id !== id));
+            closeCustomModal();
+          }
+        );
+      };
+
+      const handleClearDatabase = () => {
+        triggerModal(
+          "Borrar Base de Datos",
+          "¡ATENCIÓN! Estás a punto de eliminar TODOS los registros históricos. Esta acción es irreversible.",
+          "danger",
+          () => {
+            setRecords([]);
+            closeCustomModal();
+          }
+        );
+      };
+
+      const handleRestoreSeeds = () => {
+        triggerModal(
+          "Cargar Datos de Prueba",
+          "Se añadirán registros simulados ideales para evaluar las gráficas, filtros y descargas. ¿Proceder?",
+          "info",
+          () => {
+            setRecords(SEED_DATA);
+            closeCustomModal();
+          }
+        );
+      };
+
+      const filteredRecords = records.filter(rec => {
+        const matchPlantel = filterPlantel === 'Todos' || rec.plantel === filterPlantel;
+        const matchGrado = filterGrado === 'Todos' || rec.grado === filterGrado;
+        const matchSexo = filterSexo === 'Todos' || rec.sexo === filterSexo;
+        const matchRendimiento = filterRendimiento === 'Todos' || rec.desempeño === filterRendimiento;
+        const matchAlerta = filterAlerta === 'Todos' || 
+          (filterAlerta === 'Con Alerta' && rec.alert) || 
+          (filterAlerta === 'Sin Alerta' && !rec.alert);
+        return matchPlantel && matchGrado && matchSexo && matchRendimiento && matchAlerta;
+      });
+
+      const totalRespuestas = filteredRecords.length;
+      const promedioBienestar = totalRespuestas > 0 
+        ? (filteredRecords.reduce((acc, r) => acc + r.score, 0) / totalRespuestas).toFixed(1)
+        : 0;
+      const totalAlertas = filteredRecords.filter(r => r.alert).length;
+      const porcentajeAlertas = totalRespuestas > 0 
+        ? ((totalAlertas / totalRespuestas) * 100).toFixed(1)
+        : 0;
+
+      const handleExportCSV = () => {
+        if (filteredRecords.length === 0) {
+          triggerModal("Sin Datos", "No hay registros disponibles en tu filtro actual para exportar.", "info", closeCustomModal);
+          return;
+        }
+
+        const headers = [
+          "ID", "Fecha_Hora", "Plantel_SEMS_UDG", "Sexo", "Grado_Semestre", 
+          "Rendimiento_Academico", "R1_Alegre", "R2_Tranquilo", 
+          "R3_Activo", "R4_Fresco", "R5_Interes_Hacer", "Suma_Cruda_WHO5", 
+          "Puntaje_Final_Percentil", "Estatus_Riesgo_Alerta"
+        ];
+
+        const rows = filteredRecords.map(r => {
+          const sumaCruda = r.r1 + r.r2 + r.r3 + r.r4 + r.r5;
+          return [
+            r.id,
+            new Date(r.timestamp).toISOString(),
+            `"${r.plantel.replace(/"/g, '""')}"`,
+            r.sexo,
+            r.grado,
+            r.desempeño,
+            r.r1,
+            r.r2,
+            r.r3,
+            r.r4,
+            r.r5,
+            sumaCruda,
+            r.score,
+            r.alert ? "ALERTA" : "NORMAL"
+          ];
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+          + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Resultados_Bienestar_SEMS_UDG.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="flex flex-col min-h-screen">
+          
+          {/* Header */}
+          <header className="bg-gradient-to-r from-red-700 via-blue-950 to-slate-900 text-white shadow-lg sticky top-0 z-30">
+            <div className="max-w-7xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-white px-2 py-1 rounded-lg text-red-700 font-extrabold text-sm shadow-inner">
+                  SEMS
+                </div>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-base md:text-lg font-bold tracking-wide flex items-center gap-2 justify-center sm:justify-start">
+                    Línea de Bienestar Integral UDG
+                  </h1>
+                  <p className="text-[10px] text-slate-300">
+                    Sistema de Monitoreo Diagnóstico Psicopedagógico (WHO-5)
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {isMasterMode && (
+                  <div className="flex gap-1.5 bg-black/25 p-1 rounded-xl">
+                    <button
+                      onClick={() => setActiveTab('survey')}
+                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                        activeTab === 'survey' ? 'bg-white text-blue-950 shadow' : 'text-slate-300'
+                      }`}
+                    >
+                      Aplicar Test
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('admin')}
+                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                        activeTab === 'admin' ? 'bg-white text-blue-950 shadow' : 'text-slate-300'
+                      }`}
+                    >
+                      Panel Datos
+                    </button>
+                  </div>
+                )}
+
+                {!isMasterMode ? (
+                  <button
+                    onClick={() => { setLoginError(''); setShowLoginModal(true); }}
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition-all"
+                  >
+                    <LockIcon /> Acceso Maestro
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition-all"
+                  >
+                    Cerrar Sesión
+                  </button>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {isMasterMode && (
+            <div className="bg-amber-500/15 border-b border-amber-500/20 text-center py-2 text-xs font-bold text-amber-900 flex items-center justify-center gap-2">
+              <UnlockIcon /> Sesión de Maestro Activa. Tienes acceso completo al Panel de Datos.
+            </div>
+          )}
+
+          {/* Cuerpo principal */}
+          <main className="flex-grow max-w-7xl w-full mx-auto p-4 md:py-8">
+            
+            {activeTab === 'survey' && !surveySubmitted && (
+              <div className="max-w-3xl mx-auto">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                  <span className="bg-blue-100 text-blue-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    UDG · Unidad de Acompañamiento Escolar
+                  </span>
+                  <h2 className="text-xl font-bold text-slate-900 mt-2.5">Evaluación de Bienestar Integral</h2>
+                  <p className="text-xs md:text-sm text-slate-600 mt-1 leading-relaxed">
+                    Estimado(a) estudiante, este cuestionario breve nos permite conocer tu estado emocional general con el objetivo de planificar actividades, dinámicas y brindarte apoyo oportuno en tu comunidad escolar. Tus respuestas son valiosas y estrictamente confidenciales.
+                  </p>
+                </div>
+
+                <form onSubmit={handleSubmitSurvey} className="space-y-6">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-blue-950 text-white px-6 py-4">
+                      <h3 className="font-bold text-sm uppercase tracking-wider">Sección 1: Datos Generales</h3>
+                    </div>
+                    
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="flex flex-col gap-1.5 md:col-span-2" ref={dropdownRef}>
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                          Buscar y seleccionar tu Plantel o Módulo SEMS:
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <SearchIcon />
+                          </div>
+                          <input
+                            type="text"
+                            value={plantelSearch}
+                            onChange={(e) => {
+                              setPlantelSearch(e.target.value);
+                              setShowPlantelDropdown(true);
+                              if (!e.target.value) setPlantel('');
+                            }}
+                            onFocus={() => setShowPlantelDropdown(true)}
+                            placeholder="Escribe el nombre de tu prepa o módulo..."
+                            className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-300 text-slate-950 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white"
+                            required
+                          />
+                          {showPlantelDropdown && plantelSearch && (
+                            <div className="absolute z-50 w-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100">
+                              {filteredPlantelesList.length > 0 ? (
+                                filteredPlantelesList.map((prepaName, index) => (
+                                  <button
+                                    type="button"
+                                    key={index}
+                                    onClick={() => {
+                                      setPlantel(prepaName);
+                                      setPlantelSearch(prepaName);
+                                      setShowPlantelDropdown(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-blue-50 hover:text-blue-900 font-medium"
+                                  >
+                                    {prepaName}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-4 py-3 text-xs text-slate-500 italic">No se encontraron planteles.</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {plantel && (
+                          <span className="text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg font-bold border border-emerald-200 self-start mt-1">
+                            ✓ Seleccionado: {plantel}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Sexo (Asignado al nacer):</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {["Femenino", "Masculino", "Otro"].map((option) => (
+                            <button
+                              type="button"
+                              key={option}
+                              onClick={() => setSexo(option)}
+                              className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                                sexo === option ? 'bg-blue-50 border-blue-600 text-blue-900 ring-1 ring-blue-500' : 'bg-white text-slate-600 border-slate-200'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Semestre actual:</label>
+                        <select
+                          value={grado}
+                          onChange={(e) => setGrado(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-300 text-slate-950 rounded-xl px-3 py-2 text-sm font-semibold focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="">-- Selecciona semestre --</option>
+                          <option value="1° Semestre">1° Semestre</option>
+                          <option value="2° Semestre">2° Semestre</option>
+                          <option value="3° Semestre">3° Semestre</option>
+                          <option value="4° Semestre">4° Semestre</option>
+                          <option value="5° Semestre">5° Semestre</option>
+                          <option value="6° Semestre">6° Semestre (Egreso)</option>
+                        </select>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Desempeño Académico Auto-Reportado:</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                          {[
+                            { val: 'Excelente', desc: 'Excelente (95-100)' },
+                            { val: 'Muy Bueno', desc: 'Muy Bueno (85-94)' },
+                            { val: 'Bueno', desc: 'Bueno (75-84)' },
+                            { val: 'Suficiente', desc: 'Suficiente (60-74)' },
+                            { val: 'No Aprobatorio', desc: 'Crítico / No Aprobatorio (<60)' }
+                          ].map((item) => (
+                            <button
+                              type="button"
+                              key={item.val}
+                              onClick={() => setDesempeño(item.val)}
+                              className={`py-2 px-1 text-[11px] font-bold rounded-xl border transition-all ${
+                                desempeño === item.val ? 'bg-blue-50 border-blue-600 text-blue-900 ring-1 ring-blue-500 shadow-sm' : 'bg-white text-slate-600 border-slate-200'
+                              }`}
+                            >
+                              {item.desc}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-red-700 to-red-800 text-white px-6 py-4">
+                      <h3 className="font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+                        <HeartIcon /> Sección 2: Escala de Bienestar General (OMS)
+                      </h3>
+                      <p className="text-xs text-red-100 mt-1">Selecciona el nivel de frecuencia que mejor represente cómo te has sentido en las últimas dos semanas.</p>
+                    </div>
+
+                    <div className="p-4 sm:p-6 divide-y divide-slate-100">
+                      {[
+                        { id: 1, text: "Me he sentido alegre y de buen humor.", val: r1, setter: setR1 },
+                        { id: 2, text: "Me he sentido tranquilo y relajado.", val: r2, setter: setR2 },
+                        { id: 3, text: "Me he sentido activo y enérgico.", val: r3, setter: setR3 },
+                        { id: 4, text: "Me he despertado fresco y descansado.", val: r4, setter: setR4 },
+                        { id: 5, text: "En mi vida cotidiana hago cosas que me interesan.", val: r5, setter: setR5 },
+                      ].map((item) => (
+                        <div key={item.id} className="py-5 first:pt-0 last:pb-0">
+                          <div className="mb-3">
+                            <span className="text-[10px] font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded mr-2">PREGUNTA {item.id}</span>
+                            <h4 className="text-sm font-bold text-slate-900 inline">{item.text}</h4>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-1">
+                            {[
+                              { label: "Todo el tiempo", pts: 5 },
+                              { label: "La mayor parte del tiempo", pts: 4 },
+                              { label: "Más de la mitad del tiempo", pts: 3 },
+                              { label: "Menos de la mitad del tiempo", pts: 2 },
+                              { label: "De vez en cuando", pts: 1 },
+                              { label: "Nunca", pts: 0 }
+                            ].map((opt) => (
+                              <button
+                                type="button"
+                                key={opt.pts}
+                                onClick={() => item.setter(opt.pts)}
+                                className={`p-2.5 rounded-xl border text-center transition-all flex flex-col justify-between items-center h-full gap-1.5 ${
+                                  item.val === opt.pts ? 'bg-red-50 border-red-500 text-red-950 ring-2 ring-red-200 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="text-[9px] uppercase font-bold leading-tight">{opt.label}</span>
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${item.val === opt.pts ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.pts}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {formError && (
+                    <div className="bg-red-50 border-l-4 border-red-600 text-red-800 p-4 rounded-xl">
+                      <p className="text-xs font-bold">{formError}</p>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-red-700 to-blue-900 text-white py-4 px-6 rounded-2xl font-bold hover:from-red-800 hover:to-blue-950 shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    Registrar Diagnóstico de Bienestar →
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {activeTab === 'survey' && surveySubmitted && (
+              <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden text-center p-8 md:p-12">
+                <h2 className="text-2xl font-black text-slate-900 mb-2">¡Cuestionario Guardado!</h2>
+                <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">Tus respuestas han sido compiladas para análisis institucional grupal de forma confidencial.</p>
+                <button onClick={resetForm} className="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold py-3 text-xs transition-all">Aplicar nuevo test</button>
+              </div>
+            )}
+
+            {activeTab === 'admin' && isMasterMode && (
+              <div className="space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900">Módulo de Análisis Psicopedagógico SEMS</h2>
+                    <p className="text-xs text-slate-500">Gestión de datos de bienestar integral estudiantil.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button onClick={handleExportCSV} className="bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all">Exportar CSV</button>
+                    <button onClick={handleRestoreSeeds} className="bg-blue-50 text-blue-800 px-3.5 py-2 rounded-xl text-xs font-bold transition-all">Cargar Muestras</button>
+                    <button onClick={handleClearDatabase} className="bg-red-50 text-red-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all">Limpiar Todo</button>
+                  </div>
+                </div>
+
+                {/* Métricas */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Muestras Totales</p>
+                    <p className="text-2xl font-black text-slate-950">{totalRespuestas}</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Bienestar Promedio</p>
+                    <p className="text-2xl font-black text-slate-950">{promedioBienestar} <span className="text-xs text-slate-400 font-normal">/100</span></p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Casos Alerta 🚨</p>
+                    <p className="text-2xl font-black text-red-600">{totalAlertas}</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">% Tasa de Riesgo</p>
+                    <p className="text-2xl font-black text-slate-950">{porcentajeAlertas}%</p>
+                  </div>
+                </div>
+
+                {/* Filtros */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Plantel:</label>
+                    <select value={filterPlantel} onChange={(e) => setFilterPlantel(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      {Array.from(new Set(records.map(r => r.plantel))).sort().map((p, idx) => <option key={idx} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Semestre:</label>
+                    <select value={filterGrado} onChange={(e) => setFilterGrado(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="1° Semestre">1° Semestre</option>
+                      <option value="2° Semestre">2° Semestre</option>
+                      <option value="3° Semestre">3° Semestre</option>
+                      <option value="4° Semestre">4° Semestre</option>
+                      <option value="5° Semestre">5° Semestre</option>
+                      <option value="6° Semestre">6° Semestre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sexo:</label>
+                    <select value={filterSexo} onChange={(e) => setFilterSexo(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Femenino">Femenino</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Otro">Otro</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Desempeño:</label>
+                    <select value={filterRendimiento} onChange={(e) => setFilterRendimiento(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Excelente">Excelente</option>
+                      <option value="Muy Bueno">Muy Bueno</option>
+                      <option value="Bueno">Bueno</option>
+                      <option value="Suficiente">Suficiente</option>
+                      <option value="No Aprobatorio">No Aprobatorio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Alerta:</label>
+                    <select value={filterAlerta} onChange={(e) => setFilterAlerta(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Con Alerta">En Riesgo / Alerta</option>
+                      <option value="Sin Alerta">Normales</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tabla */}
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-900 text-white font-bold uppercase tracking-wider text-[10px]">
+                          <th className="p-3 text-center">Estatus</th>
+                          <th className="p-3">Plantel / Módulo</th>
+                          <th className="p-3">Semestre</th>
+                          <th className="p-3">Sexo</th>
+                          <th className="p-3">Académico</th>
+                          <th className="p-3 text-center">R1-R5</th>
+                          <th className="p-3 text-center">Suma</th>
+                          <th className="p-3 text-center">Score %</th>
+                          <th className="p-3 text-center">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredRecords.map((rec) => {
+                          const sumaCruda = rec.r1 + rec.r2 + rec.r3 + rec.r4 + rec.r5;
+                          return (
+                            <tr key={rec.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3 text-center">
+                                {rec.alert ? <span className="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded-full">ALERTA</span> : <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">ESTABLE</span>}
+                              </td>
+                              <td className="p-3 font-semibold text-slate-900 truncate max-w-[200px]">{rec.plantel}</td>
+                              <td className="p-3 text-slate-600">{rec.grado}</td>
+                              <td className="p-3 text-slate-600">{rec.sexo}</td>
+                              <td className="p-3 font-semibold text-slate-700">{rec.desempeño}</td>
+                              <td className="p-3 text-center font-mono text-slate-400">[{rec.r1},{rec.r2},{rec.r3},{rec.r4},{rec.r5}]</td>
+                              <td className="p-3 text-center font-bold">{sumaCruda}/25</td>
+                              <td className="p-3 text-center"><span className={`font-bold text-sm ${rec.alert ? 'text-red-600' : 'text-slate-800'}`}>{rec.score}</span></td>
+                              <td className="p-3 text-center">
+                                <button onClick={() => handleDeleteRecord(rec.id)} className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50">🗑</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Modal Login */}
+          {showLoginModal && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center relative">
+                <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">✕</button>
+                <h3 className="text-lg font-black text-slate-900">Acceso Maestro</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-6">Ingresa la contraseña para desbloquear el panel.</p>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <input
+                    type="password"
+                    value={passcodeInput}
+                    onChange={(e) => setPasscodeInput(e.target.value)}
+                    placeholder="Introduce contraseña de SEMS"
+                    className="w-full px-4 py-2.5 text-xs font-bold text-center border rounded-xl bg-slate-50 focus:ring-2"
+                    required
+                  />
+                  <p className="text-[10px] text-slate-400">Contraseña por defecto: <span className="font-bold">UDG-SEMS</span></p>
+                  {loginError && <p className="text-xs text-red-600 font-bold bg-red-50 py-1 rounded-lg">{loginError}</p>}
+                  <button type="submit" className="w-full bg-blue-950 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">Ingresar</button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Custom Modals */}
+          {customModal.isOpen && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
+                <h3 className="text-base font-black text-slate-900">{customModal.title}</h3>
+                <p className="text-xs text-slate-500 mt-2 mb-6 leading-relaxed">{customModal.message}</p>
+                <div className="flex gap-2.5 justify-center">
+                  <button onClick={closeCustomModal} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs">Cancelar</button>
+                  {customModal.onConfirm && (
+                    <button onClick={customModal.onConfirm} className={`px-4 py-2 rounded-xl text-white font-bold text-xs ${customModal.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-900 hover:bg-blue-950'}`}>Aceptar</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <footer className="bg-slate-950 text-slate-400 text-center py-6 border-t border-slate-900 text-[11px] mt-12">
+            <p>© 2026 · Universidad de Guadalajara (UDG) - SEMS</p>
+          </footer>
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById("root");
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
