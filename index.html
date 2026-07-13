@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Línea de Bienestar Integral SEMS UDG</title>
+  
+  <!-- Tailwind CSS para el diseño responsivo -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React y ReactDOM (Versión de producción) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Standalone para compilar JSX en el navegador -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .video-container iframe {
+      aspect-ratio: 16/9;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <!-- Contenedor donde React montará la aplicación -->
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const PREPARATORIAS_CATALOGO = [
+      "Escuela Preparatoria de Jalisco (Prepa 1)",
+      "Escuela Preparatoria No. 2",
+      "Escuela Preparatoria No. 3",
+      "Escuela Preparatoria No. 4",
+      "Escuela Preparatoria No. 5",
+      "Escuela Preparatoria No. 10",
+      "Escuela Preparatoria No. 12",
+      "Escuela Preparatoria de Tonalá",
+      "Escuela Preparatoria Regional de Ameca",
+      "Módulo Mezquitic"
+    ];
+
+    // Datos de cuentas autorizadas para cada Plantel (Prueba con Prepa 1, Prepa 3 o Prepa 10)
+    const CRENDENCIALES_PLANTELES = {
+      "prepa1@udg.mx": { password: "prepa123", school: "Escuela Preparatoria de Jalisco (Prepa 1)" },
+      "prepa3@udg.mx": { password: "prepa323", school: "Escuela Preparatoria No. 3" },
+      "prepa10@udg.mx": { password: "prepa10123", school: "Escuela Preparatoria No. 10" }
+    };
+
+    // Credenciales de Directivos SEMS
+    const CREDENCIAL_SEMS = {
+      email: "sems@udg.mx",
+      password: "sems123"
+    };
+
+    const SEED_DATA = [
+      { id: "1", timestamp: "2026-07-01T10:15:00.000Z", codigo: "218451235", plantel: "Escuela Preparatoria de Jalisco (Prepa 1)", desempeño: "Excelente", r1: 4, r2: 3, r3: 4, r4: 3, r5: 4, r6: 5, score: 72, alert: false },
+      { id: "2", timestamp: "2026-07-01T11:30:00.000Z", codigo: "219562341", plantel: "Escuela Preparatoria No. 3", desempeño: "No Aprobatorio", r1: 1, r2: 2, r3: 1, r4: 1, r5: 1, r6: 1, score: 24, alert: true },
+      { id: "3", timestamp: "2026-07-02T09:00:00.000Z", codigo: "220456123", plantel: "Escuela Preparatoria de Jalisco (Prepa 1)", desempeño: "Bueno", r1: 5, r2: 4, r3: 4, r4: 5, r5: 5, r6: 3, score: 92, alert: false },
+      { id: "4", timestamp: "2026-07-02T14:45:00.000Z", codigo: "217112233", plantel: "Módulo Mezquitic", desempeño: "Suficiente", r1: 2, r2: 1, r3: 0, r4: 1, r5: 2, r6: 0, score: 24, alert: true },
+      { id: "5", timestamp: "2026-07-03T12:00:00.000Z", codigo: "218991122", plantel: "Escuela Preparatoria No. 10", desempeño: "Excelente", r1: 3, r2: 4, r3: 3, r4: 3, r5: 3, r6: 4, score: 64, alert: false },
+      { id: "6", timestamp: "2026-07-04T10:20:00.000Z", codigo: "221002233", plantel: "Escuela Preparatoria No. 10", desempeño: "Muy Bueno", r1: 4, r2: 4, r3: 4, r4: 3, r5: 4, r6: 2, score: 76, alert: false }
+    ];
+
+    const HeartIcon = () => (
+      <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    );
+    const LockIcon = () => (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    );
+    const SparklesIcon = () => (
+      <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+    );
+    const VideoPlayIcon = () => (
+      <svg className="w-8 h-8 text-white mr-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    );
+    const UserIcon = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    );
+    const CheckCircleIcon = ({ className = "w-12 h-12" }) => (
+      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+    const DownloadIcon = ({ className = "w-4 h-4" }) => (
+      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+    );
+
+    function App() {
+      // Control de roles de usuario: 'student' | 'plantel' | 'sems'
+      const [currentRole, setCurrentRole] = useState('student');
+      const [schoolContext, setSchoolContext] = useState(''); // Nombre de la escuela si es rol 'plantel'
+
+      // Modal de acceso/login
+      const [showLoginModal, setShowLoginModal] = useState(false);
+      const [loginType, setLoginType] = useState(''); // 'plantel' o 'sems'
+      const [loginEmail, setLoginEmail] = useState('');
+      const [loginPassword, setLoginPassword] = useState('');
+      const [loginError, setLoginError] = useState('');
+
+      // Base de datos de registros
+      const [records, setRecords] = useState(() => {
+        const saved = localStorage.getItem('sems_bienestar_v3');
+        return saved ? JSON.parse(saved) : SEED_DATA;
+      });
+
+      useEffect(() => {
+        localStorage.setItem('sems_bienestar_v3', JSON.stringify(records));
+      }, [records]);
+
+      // --- ESTADOS DE CAPTURA DEL ALUMNO ---
+      const [codigo, setCodigo] = useState('');
+      const [desempeño, setDesempeño] = useState('');
+      const [r1, setR1] = useState(null);
+      const [r2, setR2] = useState(null);
+      const [r3, setR3] = useState(null);
+      const [r4, setR4] = useState(null);
+      const [r5, setR5] = useState(null);
+      const [r6, setR6] = useState(null); // Pausa activa
+
+      const [submitted, setSubmitted] = useState(false);
+      const [formError, setFormError] = useState('');
+
+      // --- FILTROS DE PANEL DE DATOS ---
+      const [filterPlantel, setFilterPlantel] = useState('Todos');
+      const [filterRendimiento, setFilterRendimiento] = useState('Todos');
+      const [filterAlerta, setFilterAlerta] = useState('Todos');
+
+      // --- MODAL DE DIÁLOGO PERSONALIZADO ---
+      const [customModal, setCustomModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info',
+        onConfirm: null
+      });
+
+      // --- VIDEO DUMMY DE 40 SEGUNDOS ---
+      const [videoPlaying, setVideoPlaying] = useState(false);
+
+      const triggerModal = (title, message, type, onConfirm) => {
+        setCustomModal({ isOpen: true, title, message, type, onConfirm });
+      };
+
+      const closeCustomModal = () => {
+        setCustomModal(prev => ({ ...prev, isOpen: false }));
+      };
+
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setLoginError('');
+
+        if (loginType === 'plantel') {
+          const userAccount = CRENDENCIALES_PLANTELES[loginEmail];
+          if (userAccount && userAccount.password === loginPassword) {
+            setCurrentRole('plantel');
+            setSchoolContext(userAccount.school);
+            setShowLoginModal(false);
+            setLoginEmail('');
+            setLoginPassword('');
+          } else {
+            setLoginError('Credenciales incorrectas para el Plantel de prueba. Revisa los accesos sugeridos abajo.');
+          }
+        } else if (loginType === 'sems') {
+          if (loginEmail === CREDENCIAL_SEMS.email && loginPassword === CREDENCIAL_SEMS.password) {
+            setCurrentRole('sems');
+            setShowLoginModal(false);
+            setLoginEmail('');
+            setLoginPassword('');
+          } else {
+            setLoginError('Acceso denegado para Directivos SEMS.');
+          }
+        }
+      };
+
+      const handleLogout = () => {
+        setCurrentRole('student');
+        setSchoolContext('');
+        resetForm();
+      };
+
+      const resetForm = () => {
+        setCodigo('');
+        setDesempeño('');
+        setR1(null);
+        setR2(null);
+        setR3(null);
+        setR4(null);
+        setR5(null);
+        setR6(null);
+        setSubmitted(false);
+        setFormError('');
+      };
+
+      const handleSubmitSurvey = (e) => {
+        e.preventDefault();
+
+        if (!codigo || codigo.trim().length < 5) {
+          setFormError('Por favor ingresa un código de estudiante válido de la UDG.');
+          return;
+        }
+        if (!desempeño) {
+          setFormError('Por favor selecciona tu desempeño académico.');
+          return;
+        }
+        if (r1 === null || r2 === null || r3 === null || r4 === null || r5 === null || r6 === null) {
+          setFormError('Por favor responde todos los reactivos de frecuencia.');
+          return;
+        }
+
+        setFormError('');
+
+        // Determinación del Plantel basada en el código de forma simulada
+        // Para que se distribuya de manera uniforme y elegante en la simulación
+        const charCodeSum = Array.from(codigo).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const indexPlantel = charCodeSum % PREPARATORIAS_CATALOGO.length;
+        const autoAssignedPlantel = PREPARATORIAS_CATALOGO[indexPlantel];
+
+        const rawSum = r1 + r2 + r3 + r4 + r5;
+        const finalScore = rawSum * 4;
+
+        // Criterio Alerta OMS-5 (< 13 en suma cruda o respuestas en 0 o 1)
+        const hasLowWellbeing = rawSum < 13;
+        const hasLowItemValue = [r1, r2, r3, r4, r5].some(val => val === 0 || val === 1);
+        const hasAlert = hasLowWellbeing || hasLowItemValue;
+
+        const newRecord = {
+          id: Date.now().toString(),
+          timestamp: new Date().toISOString(),
+          codigo: codigo.trim(),
+          plantel: autoAssignedPlantel,
+          desempeño,
+          r1, r2, r3, r4, r5, r6,
+          score: finalScore,
+          alert: hasAlert
+        };
+
+        setRecords(prev => [newRecord, ...prev]);
+        setSubmitted(true);
+      };
+
+      const handleDeleteRecord = (id) => {
+        triggerModal(
+          "Confirmar Eliminación",
+          "¿Estás seguro de que deseas eliminar permanentemente este registro psicopedagógico?",
+          "danger",
+          () => {
+            setRecords(prev => prev.filter(r => r.id !== id));
+            closeCustomModal();
+          }
+        );
+      };
+
+      const handleClearDatabase = () => {
+        triggerModal(
+          "Limpiar Base de Datos",
+          "¡Atención Directivo! Se eliminarán de forma permanente todas las capturas registradas. Esta acción es irreversible.",
+          "danger",
+          () => {
+            setRecords([]);
+            closeCustomModal();
+          }
+        );
+      };
+
+      const filteredRecords = records.filter(rec => {
+        // Si el rol es de Plantel específico, forzar filtro a ese plantel
+        const matchPlantel = currentRole === 'plantel' 
+          ? rec.plantel === schoolContext 
+          : (filterPlantel === 'Todos' || rec.plantel === filterPlantel);
+
+        const matchRendimiento = filterRendimiento === 'Todos' || rec.desempeño === filterRendimiento;
+        const matchAlerta = filterAlerta === 'Todos' || 
+          (filterAlerta === 'Con Alerta' && rec.alert) || 
+          (filterAlerta === 'Sin Alerta' && !rec.alert);
+
+        return matchPlantel && matchRendimiento && matchAlerta;
+      });
+
+      // Estadísticas
+      const totalRespuestas = filteredRecords.length;
+      const promedioBienestar = totalRespuestas > 0 
+        ? (filteredRecords.reduce((acc, r) => acc + r.score, 0) / totalRespuestas).toFixed(1)
+        : 0;
+      const totalAlertas = filteredRecords.filter(r => r.alert).length;
+      const porcentajeAlertas = totalRespuestas > 0 
+        ? ((totalAlertas / totalRespuestas) * 100).toFixed(1)
+        : 0;
+
+      const totalPausasActivasFrecuentes = filteredRecords.filter(r => r.r6 >= 3).length; // Mayor o igual a la mitad de los días
+      const tasaPausaActiva = totalRespuestas > 0 
+        ? ((totalPausasActivasFrecuentes / totalRespuestas) * 100).toFixed(1)
+        : 0;
+
+      const handleExportCSV = () => {
+        if (filteredRecords.length === 0) {
+          triggerModal("Sin Datos", "No hay registros disponibles bajo tus criterios actuales para generar el CSV.", "info", closeCustomModal);
+          return;
+        }
+
+        const headers = [
+          "ID", "Fecha_Hora", "Código_Estudiante", "Plantel_SEMS", 
+          "Auto_Rendimiento", "R1_Alegre", "R2_Tranquilo", 
+          "R3_Activo", "R4_Fresco", "R5_Interes", "R6_Pausa_Activa",
+          "Suma_Cruda_WHO5", "Puntaje_Porcentual_WHO5", "Alerta_Atencion"
+        ];
+
+        const rows = filteredRecords.map(r => {
+          const sumaCruda = r.r1 + r.r2 + r.r3 + r.r4 + r.r5;
+          return [
+            r.id,
+            new Date(r.timestamp).toISOString(),
+            r.codigo,
+            `"${r.plantel}"`,
+            r.desempeño,
+            r.r1, r.r2, r.r3, r.r4, r.r5, r.r6,
+            sumaCruda,
+            r.score,
+            r.alert ? "SÍ" : "NO"
+          ];
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+          + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Reporte_Bienestar_SEMS_UDG_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="flex flex-col min-h-screen bg-slate-50">
+          
+          {/* HEADER PRINCIPAL CORPORATIVO UDG / SEMS */}
+          <header className="bg-gradient-to-r from-red-700 via-blue-950 to-slate-900 text-white shadow-xl sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+              
+              <div className="flex items-center gap-3">
+                <div className="bg-white px-3 py-1.5 rounded-lg text-red-700 font-extrabold text-lg shadow-inner flex items-center justify-center">
+                  SEMS
+                </div>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-base md:text-xl font-bold tracking-wide flex items-center gap-2 justify-center sm:justify-start">
+                    Línea de Bienestar Integral UDG
+                  </h1>
+                  <p className="text-[10px] sm:text-xs text-slate-300">
+                    Sistema de Monitoreo Diagnóstico Psicopedagógico (WHO-5 + Pausa Activa)
+                  </p>
+                </div>
+              </div>
+
+              {/* Controles de Roles y Acceso Diferenciado */}
+              <div className="flex items-center gap-3">
+                
+                {currentRole === 'student' ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setLoginType('plantel'); setLoginError(''); setShowLoginModal(true); }}
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all"
+                    >
+                      <LockIcon /> Acceso Plantel
+                    </button>
+                    <button
+                      onClick={() => { setLoginType('sems'); setLoginError(''); setShowLoginModal(true); }}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition-all"
+                    >
+                      <LockIcon /> Directivo SEMS
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs bg-emerald-500 text-white px-2.5 py-1 rounded-full font-bold uppercase animate-pulse">
+                      {currentRole === 'plantel' ? `Vista: ${schoolContext}` : 'Panel Directivos SEMS'}
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1 transition-all"
+                    >
+                      Salir de Panel
+                    </button>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </header>
+
+          {/* CUERPO PRINCIPAL */}
+          <main className="flex-grow max-w-7xl w-full mx-auto p-4 md:py-8">
+
+            {/* ========================================================= */}
+            {/* VISTA 1: CAPTURA PARA ESTUDIANTES (DEFAULT / HOME)        */}
+            {/* ========================================================= */}
+            {currentRole === 'student' && !submitted && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Lado izquierdo: Explicación y Video Introductorio */}
+                <div className="lg:col-span-5 space-y-6">
+                  
+                  {/* Banner Principal */}
+                  <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                    <h2 className="text-2xl font-black text-slate-900 mt-3 leading-tight">
+                      Tu opinión nos ayuda a cuidarte
+                    </h2>
+                    <p className="text-slate-600 text-xs md:text-sm mt-2 leading-relaxed">
+                      El SEMS de la Universidad de Guadalajara busca diagnosticar las líneas base de bienestar de los estudiantes para guiar las actividades de tutoría y salud escolar. El código de estudiante sólo se usa para vincular a promedios académicos, nunca para vincular a los nombres de personas específicas. Tus datos están completamente resguardados bajo estricto secreto escolar.
+                    </p>
+                  </div>
+
+                  {/* Video Introductorio Elegante Dummy */}
+                  <div className="bg-gradient-to-br from-blue-950 to-slate-900 text-white rounded-3xl overflow-hidden shadow-xl border border-slate-800">
+                    <div className="p-5 flex items-center justify-between border-b border-white/10">
+                      <div>
+                        <h3 className="font-extrabold text-sm flex items-center gap-1.5 text-amber-400">
+                          <SparklesIcon /> Video Introductorio
+                        </h3>
+                        <p className="text-[10px] text-slate-300">Conoce por qué el SEMS quiere saber cómo te has sentido en las últimas dos semanas</p>
+                      </div>
+                      <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded font-mono">0:40 mins</span>
+                    </div>
+
+                    <div className="relative bg-black aspect-video flex items-center justify-center">
+                      {!videoPlaying ? (
+                        <div className="absolute inset-0 flex flex-col justify-center items-center p-4 bg-cover bg-center cursor-pointer hover:scale-102 transition-transform duration-200"
+                             style={{ backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.4)), url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=640")' }}
+                             onClick={() => setVideoPlaying(true)}>
+                          <div className="w-16 h-16 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-lg transition-colors transform hover:scale-110">
+                            <svg className="w-8 h-8 fill-current translate-x-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                          </div>
+                          <span className="mt-3 text-xs font-extrabold tracking-wider bg-black/40 px-3 py-1 rounded-full">REPRODUCIR VIDEO DUMMY</span>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full relative">
+                          <iframe 
+                            src="https://www.youtube.com/embed/Y39Sg4p0_g0?autoplay=1&controls=0&start=1&end=41" 
+                            title="SEMS Bienestar Video"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full"
+                          ></iframe>
+                          <button 
+                            onClick={() => setVideoPlaying(false)} 
+                            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg"
+                          >
+                            Detener Video
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Lado derecho: Formulario de Captura de Alumno */}
+                <form onSubmit={handleSubmitSurvey} className="lg:col-span-7 space-y-6">
+                  
+                  {/* Bloque Identificación Básica */}
+                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-blue-950 text-white px-6 py-4 flex items-center gap-2">
+                      <UserIcon className="w-4 h-4 text-amber-400" />
+                      <h3 className="font-extrabold text-xs uppercase tracking-wider">Paso 1: Datos Generales</h3>
+                    </div>
+
+                    <div className="p-6 space-y-5">
+                      
+                      {/* Código de Estudiante */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                          Código de Estudiante de la UDG:
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={15}
+                          value={codigo}
+                          onChange={(e) => setCodigo(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                          placeholder="Ingresa tu código oficial (ej. 218451235)"
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 text-slate-950 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                          required
+                        />
+                        <p className="text-[10px] text-slate-400">
+                          Tu código servirá de forma interna en el sistema escolar para canalizar tu plantel automáticamente.
+                        </p>
+                      </div>
+
+                      {/* Desempeño Académico Auto-Reportado Simplificado (Sin Calificación) */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          ¿Cómo consideras tu Desempeño Académico Habitual?
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                          {['Excelente', 'Muy Bueno', 'Bueno', 'Suficiente', 'No Aprobatorio'].map((level) => (
+                            <button
+                              type="button"
+                              key={level}
+                              onClick={() => setDesempeño(level)}
+                              className={`py-2.5 px-2 text-[10px] sm:text-xs font-black rounded-xl border transition-all ${
+                                desempeño === level 
+                                  ? 'bg-blue-50 border-blue-600 text-blue-900 ring-2 ring-blue-500 shadow-sm' 
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              {level}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* Bloque de Reactivos OMS-5 */}
+                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-red-700 to-red-800 text-white px-6 py-4">
+                      <h3 className="font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <HeartIcon /> Paso 2: Escala de Bienestar General WHO-5
+                      </h3>
+                      <p className="text-[10px] text-red-100 mt-1">Cómo te has sentido en las últimas dos semanas.</p>
+                    </div>
+
+                    <div className="p-4 sm:p-6 divide-y divide-slate-100">
+                      {[
+                        { id: 1, text: "Me he sentido alegre y de buen humor.", val: r1, setter: setR1 },
+                        { id: 2, text: "Me he sentido tranquilo y relajado.", val: r2, setter: setR2 },
+                        { id: 3, text: "Me he sentido activo y enérgico.", val: r3, setter: setR3 },
+                        { id: 4, text: "Me he despertado fresco y descansado.", val: r4, setter: setR4 },
+                        { id: 5, text: "En mi vida cotidiana hago cosas que me interesan.", val: r5, setter: setR5 },
+                      ].map((item) => (
+                        <div key={item.id} className="py-5 first:pt-0 last:pb-5">
+                          <div className="mb-3">
+                            <span className="text-[9px] font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded mr-2">ITEM {item.id}</span>
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 inline">{item.text}</h4>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mt-1">
+                            {[
+                              { label: "Todo el tiempo", pts: 5 },
+                              { label: "La mayor parte del tiempo", pts: 4 },
+                              { label: "Más de la mitad del tiempo", pts: 3 },
+                              { label: "Menos de la mitad del tiempo", pts: 2 },
+                              { label: "De vez en cuando", pts: 1 },
+                              { label: "Nunca", pts: 0 }
+                            ].map((opt) => (
+                              <button
+                                type="button"
+                                key={opt.pts}
+                                onClick={() => item.setter(opt.pts)}
+                                className={`p-2 rounded-xl border text-center transition-all flex flex-col justify-between items-center h-full gap-1 ${
+                                  item.val === opt.pts ? 'bg-red-50 border-red-500 text-red-950 ring-2 ring-red-200 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="text-[8px] uppercase font-bold leading-tight">{opt.label}</span>
+                                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${item.val === opt.pts ? 'bg-red-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.pts}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Bloque Reactivo de Pausa Activa */}
+                  <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-4">
+                      <h3 className="font-extrabold text-xs uppercase tracking-wider">Paso 3: Incorporación de Hábitos Saludables</h3>
+                      <p className="text-[10px] text-emerald-100 mt-1">Monitoreo de pausas saludables físicas en los planteles.</p>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="mb-4">
+                        <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded mr-2">REACTIVO INTEGRADO</span>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 inline">En el mes anterior he tenido Pausa activa:</h4>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                        {[
+                          { label: "Todos los días", pts: 5 },
+                          { label: "La mayor parte de los días", pts: 4 },
+                          { label: "Más de la mitad de los días", pts: 3 },
+                          { label: "Menos de la mitad de los días", pts: 2 },
+                          { label: "De vez en cuando", pts: 1 },
+                          { label: "Nunca", pts: 0 }
+                        ].map((opt) => (
+                          <button
+                            type="button"
+                            key={opt.pts}
+                            onClick={() => setR6(opt.pts)}
+                            className={`p-2 rounded-xl border text-center transition-all flex flex-col justify-between items-center h-full gap-1 ${
+                              r6 === opt.pts ? 'bg-emerald-50 border-emerald-500 text-emerald-950 ring-2 ring-emerald-200 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="text-[8px] uppercase font-bold leading-tight">{opt.label}</span>
+                            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${r6 === opt.pts ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}`}>{opt.pts}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {formError && (
+                    <div className="bg-red-50 border-l-4 border-red-600 text-red-800 p-4 rounded-xl text-xs font-bold">
+                      {formError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-red-700 to-blue-900 text-white py-4 px-6 rounded-2xl font-black hover:from-red-800 hover:to-blue-950 shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    Enviar respuestas
+                  </button>
+
+                </form>
+
+              </div>
+            )}
+
+            {/* Pantalla éxito tras enviar el alumno */}
+            {currentRole === 'student' && submitted && (
+              <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden text-center p-8 md:p-12">
+                <div className="inline-flex p-4 bg-emerald-100 text-emerald-600 rounded-full mb-5">
+                  <CheckCircleIcon className="w-12 h-12" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 mb-2">¡Cuestionario Guardado con Éxito!</h2>
+                <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                  Tus respuestas han sido compiladas en la base de datos de tu escuela para análisis grupal. Agradecemos enormemente tu participación.
+                </p>
+                <button onClick={resetForm} className="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold py-3 text-xs transition-all">
+                  Aplicar nuevo test
+                </button>
+              </div>
+            )}
+
+
+            {/* ========================================================= */}
+            {/* VISTA 2: PANEL DE CONTROL DE UN PLANTEL ESPECÍFICO         */}
+            {/* ========================================================= */}
+            {currentRole === 'plantel' && (
+              <div className="space-y-6">
+                
+                {/* Cabecera del Plantel */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <span className="text-[10px] bg-blue-100 text-blue-900 px-3 py-1 rounded-full font-bold uppercase">
+                      Acceso Autorizado de Plantel
+                    </span>
+                    <h2 className="text-2xl font-black text-slate-900 mt-2">
+                      {schoolContext}
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Estás visualizando exclusivamente los reportes psicopedagógicos correspondientes a tu plantel educativo.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button onClick={handleExportCSV} className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow transition-all flex-grow justify-center">
+                      Descargar Reporte del Plantel (CSV)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Métricas de Plantel */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Muestras Registradas</p>
+                    <p className="text-2xl font-black text-slate-950">{totalRespuestas}</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Bienestar General</p>
+                    <p className="text-2xl font-black text-slate-950">{promedioBienestar} <span className="text-xs text-slate-400 font-normal">/100</span></p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Estudiantes en Riesgo</p>
+                    <p className="text-2xl font-black text-red-600">{totalAlertas}</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Pausa Activa Frecuente</p>
+                    <p className="text-2xl font-black text-emerald-600">{tasaPausaActiva}%</p>
+                  </div>
+                </div>
+
+                {/* Filtros específicos de Plantel */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Rendimiento Académico:</label>
+                    <select value={filterRendimiento} onChange={(e) => setFilterRendimiento(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Excelente">Excelente</option>
+                      <option value="Muy Bueno">Muy Bueno</option>
+                      <option value="Bueno">Bueno</option>
+                      <option value="Suficiente">Suficiente</option>
+                      <option value="No Aprobatorio">No Aprobatorio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Estatus Clínico:</label>
+                    <select value={filterAlerta} onChange={(e) => setFilterAlerta(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Con Alerta">En Riesgo / Alerta</option>
+                      <option value="Sin Alerta">Estable</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <button onClick={() => { setFilterRendimiento('Todos'); setFilterAlerta('Todos'); }} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition-all">
+                      Restablecer Filtros
+                    </button>
+                  </div>
+                </div>
+
+                {/* Base de datos del Plantel */}
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-900 text-white font-bold uppercase tracking-wider text-[10px]">
+                          <th className="p-3 text-center">Estatus</th>
+                          <th className="p-3">Código Estudiante</th>
+                          <th className="p-3">Rendimiento Auto-Reportado</th>
+                          <th className="p-3 text-center">WHO5 [r1-r5]</th>
+                          <th className="p-3 text-center">Pausa Activa [r6]</th>
+                          <th className="p-3 text-center">Suma</th>
+                          <th className="p-3 text-center">Score %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredRecords.map((rec) => {
+                          const sumaCruda = rec.r1 + rec.r2 + rec.r3 + rec.r4 + rec.r5;
+                          return (
+                            <tr key={rec.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3 text-center">
+                                {rec.alert ? <span className="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded-full">ALERTA</span> : <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">ESTABLE</span>}
+                              </td>
+                              <td className="p-3 font-semibold text-slate-900">{rec.codigo}</td>
+                              <td className="p-3 text-slate-600">{rec.desempeño}</td>
+                              <td className="p-3 text-center font-mono text-slate-400">[{rec.r1},{rec.r2},{rec.r3},{rec.r4},{rec.r5}]</td>
+                              <td className="p-3 text-center font-bold text-emerald-700">{rec.r6} / 5</td>
+                              <td className="p-3 text-center font-bold">{sumaCruda}/25</td>
+                              <td className="p-3 text-center"><span className={`font-bold text-sm ${rec.alert ? 'text-red-600' : 'text-slate-800'}`}>{rec.score}</span></td>
+                            </tr>
+                          );
+                        })}
+                        {filteredRecords.length === 0 && (
+                          <tr>
+                            <td colSpan="7" className="p-8 text-center text-slate-400 italic">No hay muestras de estudiantes registradas para tu plantel con estos filtros.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+
+            {/* ========================================================= */}
+            {/* VISTA 3: ACCESO DE DIRECTIVOS DE SEMS                      */}
+            {/* ========================================================= */}
+            {currentRole === 'sems' && (
+              <div className="space-y-6">
+                
+                {/* Cabecera SEMS */}
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <span className="text-[10px] bg-amber-500 text-slate-950 px-3 py-1 rounded-full font-black uppercase">
+                      Panel Corporativo Central SEMS
+                    </span>
+                    <h2 className="text-2xl font-black text-slate-900 mt-2">
+                      Consolidado General de Bienestar SEMS
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Acceso exclusivo para directores. Descarga la base de datos completa de todas las preparatorias de la UDG.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button onClick={handleExportCSV} className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow transition-all flex-grow justify-center">
+                      <DownloadIcon className="w-4 h-4"/> Descargar Base de Datos Completa (CSV)
+                    </button>
+                    <button onClick={handleClearDatabase} className="bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-all">
+                      Limpiar Base
+                    </button>
+                  </div>
+                </div>
+
+                {/* Métricas Consolidado General */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Muestras Totales (SEMS)</p>
+                    <p className="text-2xl font-black text-slate-950">{totalRespuestas}</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Índice Bienestar General</p>
+                    <p className="text-2xl font-black text-slate-950">{promedioBienestar} <span className="text-xs text-slate-400 font-normal">/100</span></p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Total Casos en Alerta</p>
+                    <p className="text-2xl font-black text-red-600">{totalAlertas}</p>
+                  </div>
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Tasa Global Pausa Activa</p>
+                    <p className="text-2xl font-black text-emerald-600">{tasaPausaActiva}%</p>
+                  </div>
+                </div>
+
+                {/* Filtros Generales */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filtrar por Plantel:</label>
+                    <select value={filterPlantel} onChange={(e) => setFilterPlantel(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos los Planteles</option>
+                      {PREPARATORIAS_CATALOGO.map((p, idx) => <option key={idx} value={p}>{p}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Desempeño Académico:</label>
+                    <select value={filterRendimiento} onChange={(e) => setFilterRendimiento(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Excelente">Excelente</option>
+                      <option value="Muy Bueno">Muy Bueno</option>
+                      <option value="Bueno">Bueno</option>
+                      <option value="Suficiente">Suficiente</option>
+                      <option value="No Aprobatorio">No Aprobatorio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Alerta Clínica:</label>
+                    <select value={filterAlerta} onChange={(e) => setFilterAlerta(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700">
+                      <option value="Todos">Todos</option>
+                      <option value="Con Alerta">En Riesgo</option>
+                      <option value="Sin Alerta">Estables</option>
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <button onClick={() => { setFilterPlantel('Todos'); setFilterRendimiento('Todos'); setFilterAlerta('Todos'); }} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition-all">
+                      Restablecer Filtros
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tabla de registros consolidados */}
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-900 text-white font-bold uppercase tracking-wider text-[10px]">
+                          <th className="p-3 text-center">Estatus</th>
+                          <th className="p-3">Código Estudiante</th>
+                          <th className="p-3">Plantel Asociado</th>
+                          <th className="p-3">Desempeño</th>
+                          <th className="p-3 text-center">WHO5 [r1-r5]</th>
+                          <th className="p-3 text-center">Pausa Activa</th>
+                          <th className="p-3 text-center">Score %</th>
+                          <th className="p-3 text-center">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredRecords.map((rec) => {
+                          const sumaCruda = rec.r1 + rec.r2 + rec.r3 + rec.r4 + rec.r5;
+                          return (
+                            <tr key={rec.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3 text-center">
+                                {rec.alert ? <span className="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded-full">ALERTA</span> : <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">ESTABLE</span>}
+                              </td>
+                              <td className="p-3 font-semibold text-slate-900">{rec.codigo}</td>
+                              <td className="p-3 font-semibold text-slate-700">{rec.plantel}</td>
+                              <td className="p-3 text-slate-600">{rec.desempeño}</td>
+                              <td className="p-3 text-center font-mono text-slate-400">[{rec.r1},{rec.r2},{rec.r3},{rec.r4},{rec.r5}]</td>
+                              <td className="p-3 text-center font-bold text-emerald-700">{rec.r6}/5</td>
+                              <td className="p-3 text-center"><span className={`font-bold text-sm ${rec.alert ? 'text-red-600' : 'text-slate-800'}`}>{rec.score}</span></td>
+                              <td className="p-3 text-center">
+                                <button onClick={() => handleDeleteRecord(rec.id)} className="text-slate-400 hover:text-red-600 p-1 rounded hover:bg-red-50">🗑</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {filteredRecords.length === 0 && (
+                          <tr>
+                            <td colSpan="8" className="p-8 text-center text-slate-400 italic">No hay registros consolidados en la base de datos para esta combinación de filtros.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+          </main>
+
+          {/* ========================================================= */}
+          {/* DIÁLOGO MODAL: LOGIN / ACCESO RESTRINGIDO                 */}
+          {/* ========================================================= */}
+          {showLoginModal && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl text-center relative border border-slate-100 animate-in fade-in duration-200">
+                <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">✕</button>
+                
+                <h3 className="text-lg font-black text-slate-900">
+                  {loginType === 'plantel' ? 'Acceso de Planteles UDG' : 'Acceso Directivos SEMS'}
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-1 mb-5">
+                  {loginType === 'plantel' ? 'Introduce las credenciales de tu escuela.' : 'Uso exclusivo de oficinas centrales del SEMS.'}
+                </p>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="Correo Institucional"
+                    className="w-full px-4 py-2.5 text-xs font-bold text-center border rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Contraseña"
+                    className="w-full px-4 py-2.5 text-xs font-bold text-center border rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    required
+                  />
+
+                  {loginError && (
+                    <p className="text-[10px] text-red-600 font-bold bg-red-50 py-1.5 px-2 rounded-lg leading-tight">
+                      {loginError}
+                    </p>
+                  )}
+
+                  <button type="submit" className="w-full bg-blue-950 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition-all">
+                    Ingresar
+                  </button>
+                </form>
+
+                {/* Pistas de prueba útiles para la evaluación */}
+                <div className="mt-6 pt-4 border-t border-slate-100 text-left">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Cuentas de Prueba:</p>
+                  {loginType === 'plantel' ? (
+                    <div className="text-[9px] text-slate-500 mt-1 space-y-1">
+                      <p>• <strong>Prepa 1:</strong> prepa1@udg.mx / prepa123</p>
+                      <p>• <strong>Prepa 3:</strong> prepa3@udg.mx / prepa323</p>
+                      <p>• <strong>Prepa 10:</strong> prepa10@udg.mx / prepa10123</p>
+                    </div>
+                  ) : (
+                    <div className="text-[9px] text-slate-500 mt-1">
+                      <p>• <strong>SEMS Central:</strong> sems@udg.mx / sems123</p>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* DIÁLOGO MODAL PERSONALIZADO (REEMPLAZA CONFIRM/ALERT)      */}
+          {/* ========================================================= */}
+          {customModal.isOpen && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center">
+                <h3 className="text-base font-black text-slate-900">{customModal.title}</h3>
+                <p className="text-xs text-slate-500 mt-2 mb-6 leading-relaxed">{customModal.message}</p>
+                <div className="flex gap-2.5 justify-center">
+                  <button onClick={closeCustomModal} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-all">Cancelar</button>
+                  {customModal.onConfirm && (
+                    <button onClick={customModal.onConfirm} className={`px-4 py-2 rounded-xl text-white font-bold text-xs transition-all ${customModal.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-900 hover:bg-blue-950'}`}>Aceptar</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="bg-slate-950 text-slate-500 text-center py-6 border-t border-slate-900 text-[11px] mt-12 shrink-0">
+            <p>© 2026 · Universidad de Guadalajara (UDG) - SEMS</p>
+            <p className="text-[10px] text-slate-600 mt-1">Sistema Diagnóstico Basado en el Índice de Bienestar de la OMS (WHO-5 v1998).</p>
+          </footer>
+
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById("root");
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
